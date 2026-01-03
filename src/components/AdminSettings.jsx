@@ -1,97 +1,102 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
-const AdminSettings = ({ logoImage, headerImage, onSave }) => {
-  const [newLogo, setNewLogo] = useState("");
-  const [newHeader, setNewHeader] = useState("");
+const AdminSettings = ({
+  logoImage: initialLogo,
+  headerImage: initialHeader,
+  onSave,
+}) => {
+  const [logoImage, setLogoImage] = useState(initialLogo);
+  const [headerImage, setHeaderImage] = useState(initialHeader);
+  const [logoFile, setLogoFile] = useState(null);
+  const [headerFile, setHeaderFile] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
-    setNewLogo(logoImage || "");
-    setNewHeader(headerImage || "");
-  }, [logoImage, headerImage]);
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5000000) {
+        alert("Image too large. Max 5MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoImage(reader.result);
+        setLogoFile(reader.result);
+        setHasChanges(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-  useEffect(() => {
-    const logoChanged = newLogo !== (logoImage || "");
-    const headerChanged = newHeader !== (headerImage || "");
-    setHasChanges(logoChanged || headerChanged);
-  }, [newLogo, newHeader, logoImage, headerImage]);
+  const handleHeaderChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5000000) {
+        alert("Image too large. Max 5MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setHeaderImage(reader.result);
+        setHeaderFile(reader.result);
+        setHasChanges(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-  const handleSave = () => {
-    const logoChanged = newLogo !== (logoImage || "");
-    const headerChanged = newHeader !== (headerImage || "");
-
-    onSave(logoChanged ? newLogo : null, headerChanged ? newHeader : null);
+  const handleSave = async () => {
+    await onSave(logoFile, headerFile);
     setHasChanges(false);
+    setLogoFile(null);
+    setHeaderFile(null);
   };
 
   const handleClearLogo = () => {
-    setNewLogo("");
+    setLogoImage("");
+    setLogoFile("");
+    setHasChanges(true);
   };
 
   const handleClearHeader = () => {
-    setNewHeader("");
+    setHeaderImage("");
+    setHeaderFile("");
+    setHasChanges(true);
   };
 
   const styles = {
-    container: {
-      background: "white",
-      borderRadius: "12px",
-      padding: "2rem",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-      maxWidth: "800px",
-      margin: "0 auto",
-    },
-    title: {
-      fontSize: "1.8rem",
-      color: "#003d7a",
-      marginBottom: "2rem",
-    },
     section: {
+      maxWidth: "1200px",
+      margin: "0 auto 2rem",
+      background: "white",
+      padding: "2rem",
+      borderRadius: "12px",
+      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+    },
+    headerImageSection: {
       marginBottom: "2rem",
-      paddingBottom: "2rem",
-      borderBottom: "1px solid #eee",
+      padding: "1.5rem",
+      background: "#f8f9fa",
+      borderRadius: "8px",
     },
-    sectionTitle: {
-      fontSize: "1.2rem",
-      color: "#333",
-      marginBottom: "1rem",
-      fontWeight: "600",
-    },
-    label: {
-      display: "block",
-      marginBottom: "0.5rem",
-      color: "#666",
-      fontSize: "0.9rem",
-    },
-    input: {
-      width: "100%",
+    fileInput: {
       padding: "0.8rem",
-      border: "1px solid #ddd",
+      border: "2px solid #ddd",
       borderRadius: "8px",
-      fontSize: "1rem",
-      boxSizing: "border-box",
-      marginBottom: "0.5rem",
-    },
-    preview: {
-      marginTop: "1rem",
-      padding: "1rem",
-      background: "#f5f5f5",
-      borderRadius: "8px",
-      textAlign: "center",
+      width: "100%",
+      cursor: "pointer",
+      marginBottom: "1rem",
     },
     previewImage: {
+      marginTop: "1rem",
       maxWidth: "100%",
       maxHeight: "200px",
       borderRadius: "8px",
     },
-    previewText: {
-      color: "#999",
-      fontSize: "0.9rem",
-    },
     buttonGroup: {
       display: "flex",
       gap: "1rem",
-      marginTop: "0.5rem",
+      marginTop: "1rem",
     },
     clearButton: {
       padding: "0.6rem 1.2rem",
@@ -100,110 +105,82 @@ const AdminSettings = ({ logoImage, headerImage, onSave }) => {
       border: "none",
       borderRadius: "6px",
       cursor: "pointer",
-      fontSize: "0.9rem",
-      fontWeight: "500",
+      fontWeight: "600",
     },
     saveButton: {
       padding: "1rem 2rem",
-      background: hasChanges ? "#28a745" : "#ccc",
+      background: hasChanges ? "#28a745" : "#6c757d",
       color: "white",
       border: "none",
       borderRadius: "8px",
-      cursor: hasChanges ? "pointer" : "not-allowed",
       fontSize: "1.1rem",
       fontWeight: "600",
+      cursor: hasChanges ? "pointer" : "not-allowed",
       marginTop: "2rem",
       width: "100%",
-      transition: "background 0.3s",
     },
   };
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.title}>Settings</h2>
+    <div style={styles.section}>
+      <h2 style={{ color: "#003d7a", marginBottom: "1rem" }}>
+        Website Settings
+      </h2>
 
-      <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Logo Image</h3>
-        <label style={styles.label}>Enter logo image URL:</label>
+      <div style={styles.headerImageSection}>
+        <h3 style={{ color: "#003d7a", marginBottom: "1rem" }}>Logo Image</h3>
         <input
-          type="text"
-          value={newLogo}
-          onChange={(e) => setNewLogo(e.target.value)}
-          placeholder="https://example.com/logo.png"
-          style={styles.input}
+          type="file"
+          accept="image/*"
+          onChange={handleLogoChange}
+          style={styles.fileInput}
         />
         <div style={styles.buttonGroup}>
-          <button
-            onClick={handleClearLogo}
-            style={styles.clearButton}
-            disabled={!newLogo}
-          >
-            Clear Logo
-          </button>
-        </div>
-        <div style={styles.preview}>
-          {newLogo ? (
-            <img
-              src={newLogo}
-              alt="Logo preview"
-              style={styles.previewImage}
-              onError={(e) => {
-                e.target.style.display = "none";
-                e.target.nextSibling.style.display = "block";
-              }}
-            />
-          ) : (
-            <p style={styles.previewText}>No logo image</p>
+          {logoImage && (
+            <button onClick={handleClearLogo} style={styles.clearButton}>
+              Clear Logo
+            </button>
           )}
-          <p style={{ ...styles.previewText, display: "none" }}>
-            Invalid image URL
-          </p>
         </div>
+        {logoImage && (
+          <img
+            src={logoImage}
+            alt="Logo preview"
+            style={{ ...styles.previewImage, maxHeight: "100px" }}
+          />
+        )}
       </div>
 
-      <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Header Background Image</h3>
-        <label style={styles.label}>Enter header background image URL:</label>
+      <div style={styles.headerImageSection}>
+        <h3 style={{ color: "#003d7a", marginBottom: "1rem" }}>
+          Header Background Image
+        </h3>
         <input
-          type="text"
-          value={newHeader}
-          onChange={(e) => setNewHeader(e.target.value)}
-          placeholder="https://example.com/header.jpg"
-          style={styles.input}
+          type="file"
+          accept="image/*"
+          onChange={handleHeaderChange}
+          style={styles.fileInput}
         />
         <div style={styles.buttonGroup}>
-          <button
-            onClick={handleClearHeader}
-            style={styles.clearButton}
-            disabled={!newHeader}
-          >
-            Clear Header
-          </button>
-        </div>
-        <div style={styles.preview}>
-          {newHeader ? (
-            <img
-              src={newHeader}
-              alt="Header preview"
-              style={styles.previewImage}
-              onError={(e) => {
-                e.target.style.display = "none";
-                e.target.nextSibling.style.display = "block";
-              }}
-            />
-          ) : (
-            <p style={styles.previewText}>No header background image</p>
+          {headerImage && (
+            <button onClick={handleClearHeader} style={styles.clearButton}>
+              Clear Header
+            </button>
           )}
-          <p style={{ ...styles.previewText, display: "none" }}>
-            Invalid image URL
-          </p>
         </div>
+        {headerImage && (
+          <img
+            src={headerImage}
+            alt="Header preview"
+            style={styles.previewImage}
+          />
+        )}
       </div>
 
       <button
         onClick={handleSave}
-        disabled={!hasChanges}
         style={styles.saveButton}
+        disabled={!hasChanges}
       >
         {hasChanges ? "Save Changes" : "No Changes"}
       </button>
