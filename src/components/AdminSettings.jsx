@@ -1,3 +1,6 @@
+// ============================================
+// AdminSettings.jsx - RESTORED WORKING VERSION
+// ============================================
 import React, { useState } from "react";
 
 const AdminSettings = ({
@@ -6,9 +9,15 @@ const AdminSettings = ({
   onSave,
 }) => {
   const [logoImage, setLogoImage] = useState(initialLogo);
-  const [headerImage, setHeaderImage] = useState(initialHeader);
+  const [headerImages, setHeaderImages] = useState(
+    Array.isArray(initialHeader)
+      ? initialHeader
+      : initialHeader
+      ? [initialHeader]
+      : []
+  );
   const [logoFile, setLogoFile] = useState(null);
-  const [headerFile, setHeaderFile] = useState(null);
+  const [headerFiles, setHeaderFiles] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
 
   const handleLogoChange = (e) => {
@@ -28,40 +37,52 @@ const AdminSettings = ({
     }
   };
 
-  const handleHeaderChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+  const handleHeaderImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+
+    files.forEach((file) => {
       if (file.size > 5000000) {
-        alert("Image too large. Max 5MB.");
+        alert(`${file.name} is too large. Max 5MB per image.`);
         return;
       }
+
       const reader = new FileReader();
       reader.onloadend = () => {
-        setHeaderImage(reader.result);
-        setHeaderFile(reader.result);
+        setHeaderImages((prev) => [...prev, reader.result]);
+        setHeaderFiles(true);
         setHasChanges(true);
       };
       reader.readAsDataURL(file);
+    });
+  };
+
+  const removeHeaderImage = (index) => {
+    setHeaderImages((prev) => prev.filter((_, i) => i !== index));
+    setHeaderFiles(true);
+    setHasChanges(true);
+  };
+
+  const deleteLogo = () => {
+    if (window.confirm("Delete logo?")) {
+      setLogoImage(null);
+      setLogoFile(null);
+      setHasChanges(true);
+    }
+  };
+
+  const clearAllHeaders = () => {
+    if (window.confirm("Delete all header images?")) {
+      setHeaderImages([]);
+      setHeaderFiles(true);
+      setHasChanges(true);
     }
   };
 
   const handleSave = async () => {
-    await onSave(logoFile, headerFile);
+    await onSave(logoFile, headerFiles ? headerImages : null);
     setHasChanges(false);
     setLogoFile(null);
-    setHeaderFile(null);
-  };
-
-  const handleClearLogo = () => {
-    setLogoImage("");
-    setLogoFile("");
-    setHasChanges(true);
-  };
-
-  const handleClearHeader = () => {
-    setHeaderImage("");
-    setHeaderFile("");
-    setHasChanges(true);
+    setHeaderFiles(null);
   };
 
   const styles = {
@@ -79,33 +100,92 @@ const AdminSettings = ({
       background: "#f8f9fa",
       borderRadius: "8px",
     },
-    fileInput: {
-      padding: "0.8rem",
-      border: "2px solid #ddd",
+    uploadButton: {
+      padding: "0.8rem 1.5rem",
+      background: "#0066cc",
+      color: "white",
+      border: "none",
       borderRadius: "8px",
-      width: "100%",
       cursor: "pointer",
+      fontWeight: "600",
+      fontSize: "1rem",
+      display: "inline-block",
       marginBottom: "1rem",
+    },
+    changeButton: {
+      padding: "0.8rem 1.5rem",
+      background: "#ffc107",
+      color: "white",
+      border: "none",
+      borderRadius: "8px",
+      cursor: "pointer",
+      fontWeight: "600",
+      fontSize: "1rem",
+      display: "inline-block",
+      marginBottom: "1rem",
+      marginRight: "0.5rem",
+    },
+    deleteButton: {
+      padding: "0.8rem 1.5rem",
+      background: "#dc3545",
+      color: "white",
+      border: "none",
+      borderRadius: "8px",
+      cursor: "pointer",
+      fontWeight: "600",
+      fontSize: "1rem",
+      display: "inline-block",
+      marginBottom: "1rem",
+      marginRight: "0.5rem",
+    },
+    hiddenInput: {
+      display: "none",
     },
     previewImage: {
       marginTop: "1rem",
       maxWidth: "100%",
       maxHeight: "200px",
       borderRadius: "8px",
+      display: "block",
     },
-    buttonGroup: {
-      display: "flex",
+    imageGrid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
       gap: "1rem",
       marginTop: "1rem",
     },
-    clearButton: {
-      padding: "0.6rem 1.2rem",
+    imageItem: {
+      position: "relative",
+      paddingTop: "66%",
+      borderRadius: "8px",
+      overflow: "hidden",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    },
+    image: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+    },
+    removeButton: {
+      position: "absolute",
+      top: "5px",
+      right: "5px",
       background: "#dc3545",
       color: "white",
       border: "none",
-      borderRadius: "6px",
+      borderRadius: "50%",
+      width: "30px",
+      height: "30px",
       cursor: "pointer",
-      fontWeight: "600",
+      fontSize: "18px",
+      fontWeight: "bold",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      lineHeight: "1",
     },
     saveButton: {
       padding: "1rem 2rem",
@@ -119,6 +199,17 @@ const AdminSettings = ({
       marginTop: "2rem",
       width: "100%",
     },
+    noImage: {
+      color: "#999",
+      fontStyle: "italic",
+      marginTop: "1rem",
+    },
+    hint: {
+      color: "#666",
+      fontSize: "0.9rem",
+      marginTop: "0.5rem",
+      fontStyle: "italic",
+    },
   };
 
   return (
@@ -129,51 +220,82 @@ const AdminSettings = ({
 
       <div style={styles.headerImageSection}>
         <h3 style={{ color: "#003d7a", marginBottom: "1rem" }}>Logo Image</h3>
+
         <input
+          id="logo-upload"
           type="file"
           accept="image/*"
           onChange={handleLogoChange}
-          style={styles.fileInput}
+          style={styles.hiddenInput}
         />
-        <div style={styles.buttonGroup}>
-          {logoImage && (
-            <button onClick={handleClearLogo} style={styles.clearButton}>
-              Clear Logo
-            </button>
-          )}
-        </div>
+        <label
+          htmlFor="logo-upload"
+          style={logoImage ? styles.changeButton : styles.uploadButton}
+        >
+          {logoImage ? "Change Logo" : "Add Logo"}
+        </label>
+
         {logoImage && (
+          <button onClick={deleteLogo} style={styles.deleteButton}>
+            Delete Logo
+          </button>
+        )}
+
+        {logoImage ? (
           <img
             src={logoImage}
             alt="Logo preview"
             style={{ ...styles.previewImage, maxHeight: "100px" }}
           />
+        ) : (
+          <p style={styles.noImage}>No logo uploaded</p>
         )}
       </div>
 
       <div style={styles.headerImageSection}>
         <h3 style={{ color: "#003d7a", marginBottom: "1rem" }}>
-          Header Background Image
+          Header Background Images (Slideshow)
         </h3>
+
         <input
+          id="header-upload"
           type="file"
           accept="image/*"
-          onChange={handleHeaderChange}
-          style={styles.fileInput}
+          multiple
+          onChange={handleHeaderImagesChange}
+          style={styles.hiddenInput}
         />
-        <div style={styles.buttonGroup}>
-          {headerImage && (
-            <button onClick={handleClearHeader} style={styles.clearButton}>
-              Clear Header
-            </button>
-          )}
-        </div>
-        {headerImage && (
-          <img
-            src={headerImage}
-            alt="Header preview"
-            style={styles.previewImage}
-          />
+        <label htmlFor="header-upload" style={styles.uploadButton}>
+          Add Images ({headerImages.length})
+        </label>
+
+        {headerImages.length > 0 && (
+          <button onClick={clearAllHeaders} style={styles.deleteButton}>
+            Delete All
+          </button>
+        )}
+
+        {headerImages.length > 0 ? (
+          <div style={styles.imageGrid}>
+            {headerImages.map((img, index) => (
+              <div key={index} style={styles.imageItem}>
+                <img
+                  src={img}
+                  alt={`Header ${index + 1}`}
+                  style={styles.image}
+                />
+                <button
+                  onClick={() => removeHeaderImage(index)}
+                  style={styles.removeButton}
+                  title="Remove image"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={styles.noImage}>No header images uploaded</p>
         )}
       </div>
 

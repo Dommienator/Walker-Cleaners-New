@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getSettings } from "../supabase";
+import { supabase } from "../supabase";
 
 const Header = () => {
   const [logoImage, setLogoImage] = useState("");
-  const [headerImage, setHeaderImage] = useState("");
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  const defaultSlides = [
+  const [slides, setSlides] = useState([
     "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1200",
     "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=1200",
     "https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?w=1200",
-  ];
+  ]);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     loadSettings();
@@ -19,15 +17,39 @@ const Header = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % defaultSlides.length);
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [defaultSlides.length]);
+  }, [slides.length]);
 
   const loadSettings = async () => {
-    const settings = await getSettings();
-    setLogoImage(settings.logo_image || "");
-    setHeaderImage(settings.header_image || "");
+    try {
+      const { data } = await supabase
+        .from("settings")
+        .select("*")
+        .limit(1)
+        .single();
+
+      if (data) {
+        if (data.logo_image) {
+          setLogoImage(data.logo_image);
+        }
+
+        if (data.header_image) {
+          try {
+            const images = JSON.parse(data.header_image);
+            if (Array.isArray(images) && images.length > 0) {
+              setSlides(images);
+            }
+          } catch {
+            // If not JSON, use as single image
+            setSlides([data.header_image]);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading settings:", error);
+    }
   };
 
   const styles = {
@@ -181,15 +203,12 @@ const Header = () => {
     <header style={styles.header}>
       {/* Slideshow Background */}
       <div style={styles.slideshow}>
-        {defaultSlides.map((slide, index) => (
+        {slides.map((slide, index) => (
           <div
             key={index}
             style={{
               ...styles.slide,
-              backgroundImage:
-                headerImage && index === 0
-                  ? `url(${headerImage})`
-                  : `url(${slide})`,
+              backgroundImage: `url(${slide})`,
               opacity: currentSlide === index ? 1 : 0,
             }}
           />
@@ -269,14 +288,12 @@ const Header = () => {
       {/* Hero Content */}
       <div style={styles.heroContent}>
         <h1 style={styles.heroTitle}>Professional Cleaning Services</h1>
-        <p style={styles.heroSubtitle}>
-          Your trusted partner for spotless spaces
-        </p>
+        <p style={styles.heroSubtitle}>Your Mess is our Mission</p>
       </div>
 
       {/* Slideshow Dots */}
       <div style={styles.dots}>
-        {defaultSlides.map((_, index) => (
+        {slides.map((_, index) => (
           <button
             key={index}
             style={{
