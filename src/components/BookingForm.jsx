@@ -11,7 +11,7 @@ const BookingForm = () => {
   const [showNotification, setShowNotification] = useState(false);
   const [formData, setFormData] = useState({
     type: searchParams.get("type") || "service",
-    serviceOrPackage: searchParams.get("name") || "",
+    selectedOption: searchParams.get("name") || "",
     name: "",
     email: "",
     phone: "",
@@ -36,7 +36,24 @@ const BookingForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = await saveBooking(formData);
+
+    // Transform data to match database schema
+    const bookingData = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      service: formData.type === "service" ? formData.selectedOption : "",
+      package: formData.type === "package" ? formData.selectedOption : "",
+      date: formData.date,
+      time: formData.time,
+      address: formData.address,
+      message: formData.message,
+      status: "pending",
+    };
+
+    console.log("Submitting booking:", bookingData);
+
+    const success = await saveBooking(bookingData);
     if (success) {
       setShowNotification(true);
     } else {
@@ -191,8 +208,8 @@ const BookingForm = () => {
                 <span style={styles.required}>*</span>
               </label>
               <select
-                name="serviceOrPackage"
-                value={formData.serviceOrPackage}
+                name="selectedOption"
+                value={formData.selectedOption}
                 onChange={handleChange}
                 style={styles.select}
                 required

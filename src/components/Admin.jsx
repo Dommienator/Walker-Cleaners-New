@@ -13,7 +13,7 @@ import {
   savePackage,
   deletePackage,
   getSettings,
-  saveHeaderImage as saveHeaderToSupabase,
+  saveHeaderImage,
   saveLogo,
   migrateDefaultData,
 } from "../supabase";
@@ -30,7 +30,6 @@ const Admin = () => {
   const [headerImage, setHeaderImage] = useState("");
   const [logoImage, setLogoImage] = useState("");
   const [notification, setNotification] = useState("");
-  const [loading, setLoading] = useState(true);
 
   const ADMIN_PASSWORD = "walker2024";
 
@@ -55,21 +54,37 @@ const Admin = () => {
   const loadData = async () => {
     console.log("Loading admin data...");
 
-    // First, migrate default data if needed
     await migrateDefaultData();
 
-    // Then load all data
     const servicesData = await getServices();
     const packagesData = await getPackages();
     const settingsData = await getSettings();
 
     console.log("Services loaded:", servicesData);
     console.log("Packages loaded:", packagesData);
+    console.log("Settings loaded:", settingsData);
 
     setServices(servicesData);
     setPackages(packagesData);
-    setHeaderImage(settingsData.header_image || "");
+
+    // Parse header_image as array
+    if (settingsData.header_image) {
+      try {
+        const parsed = JSON.parse(settingsData.header_image);
+        console.log("Parsed header images:", parsed);
+        setHeaderImage(
+          Array.isArray(parsed) ? parsed : [settingsData.header_image]
+        );
+      } catch (e) {
+        console.log("Failed to parse header_image, using as single:", e);
+        setHeaderImage([settingsData.header_image]);
+      }
+    } else {
+      setHeaderImage([]);
+    }
+
     setLogoImage(settingsData.logo_image || "");
+    console.log("Logo set to:", settingsData.logo_image || "");
   };
 
   const showNotification = (message) => {
@@ -305,20 +320,50 @@ const Admin = () => {
           logoImage={logoImage}
           headerImage={headerImage}
           onSave={async (newLogo, newHeader) => {
-            if (newLogo) {
+            console.log("=== ADMIN SAVE HANDLER ===");
+            console.log("newLogo:", newLogo);
+            console.log("newHeader:", newHeader);
+
+            // Handle logo - null means no change, "" means delete, string means update
+            if (newLogo !== null) {
+              console.log(
+                "Saving logo:",
+                newLogo === "" ? "DELETING" : "UPDATING"
+              );
               const success = await saveLogo(newLogo);
               if (success) {
                 setLogoImage(newLogo);
-                showNotification("Logo updated!");
+                showNotification(
+                  newLogo === ""
+                    ? "Logo deleted!"
+                    : "Logo updated successfully!"
+                );
+              } else {
+                alert("Failed to save logo");
+                return;
               }
             }
-            if (newHeader) {
-              const success = await saveHeaderToSupabase(newHeader);
+
+            if (newHeader !== null) {
+              console.log("Saving header images...");
+              const success = await saveHeaderImage(newHeader);
               if (success) {
-                setHeaderImage(newHeader);
-                showNotification("Header image updated!");
+                try {
+                  const parsed = JSON.parse(newHeader);
+                  setHeaderImage(Array.isArray(parsed) ? parsed : []);
+                  showNotification("Header images updated successfully!");
+                } catch (e) {
+                  console.error("Failed to parse header images:", e);
+                  setHeaderImage([]);
+                }
+              } else {
+                alert("Failed to save header images");
+                return;
               }
             }
+
+            console.log("Reloading data...");
+            await loadData();
           }}
         />
       )}

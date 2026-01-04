@@ -1,88 +1,45 @@
 import { createClient } from "@supabase/supabase-js";
-import { services as defaultServices } from "./data/services";
-import { packages as defaultPackages } from "./data/packages";
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Migrate data from default files to Supabase if tables are empty
-export const migrateDefaultData = async () => {
-  try {
-    // Check if services exist
-    const { data: existingServices } = await supabase
-      .from("services")
-      .select("id")
-      .limit(1);
+// ==================== SERVICES ====================
 
-    // If no services exist, insert default ones
-    if (!existingServices || existingServices.length === 0) {
-      console.log("Migrating default services to Supabase...");
-      const servicesToInsert = defaultServices.map(({ icon, ...service }) => ({
-        ...service,
-        images: service.images || [],
-      }));
-
-      await supabase.from("services").insert(servicesToInsert);
-      console.log("Services migrated successfully!");
-    }
-
-    // Check if packages exist
-    const { data: existingPackages } = await supabase
-      .from("packages")
-      .select("id")
-      .limit(1);
-
-    // If no packages exist, insert default ones
-    if (!existingPackages || existingPackages.length === 0) {
-      console.log("Migrating default packages to Supabase...");
-      const packagesToInsert = defaultPackages.map((pkg) => ({
-        ...pkg,
-        images: pkg.images || [],
-      }));
-
-      await supabase.from("packages").insert(packagesToInsert);
-      console.log("Packages migrated successfully!");
-    }
-  } catch (error) {
-    console.error("Error migrating data:", error);
-  }
-};
-
-// Services
 export const getServices = async () => {
-  const { data, error } = await supabase
-    .from("services")
-    .select("*")
-    .order("id");
+  try {
+    const { data, error } = await supabase
+      .from("services")
+      .select("*")
+      .order("id", { ascending: true });
 
-  if (error) {
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
     console.error("Error fetching services:", error);
     return [];
   }
-  return data || [];
 };
 
 export const saveService = async (service) => {
   try {
     if (service.isNew) {
-      // Remove the isNew flag, id, and icon before inserting
-      // Let Supabase auto-generate the ID
-      const { isNew, id, icon, ...serviceData } = service;
-      const { data, error } = await supabase
-        .from("services")
-        .insert([serviceData])
-        .select();
+      const { error } = await supabase.from("services").insert({
+        title: service.title,
+        description: service.description,
+        images: service.images,
+      });
 
       if (error) throw error;
-      return true;
     } else {
-      // Update existing service
-      const { isNew, icon, ...serviceData } = service;
       const { error } = await supabase
         .from("services")
-        .update(serviceData)
+        .update({
+          title: service.title,
+          description: service.description,
+          images: service.images,
+        })
         .eq("id", service.id);
 
       if (error) throw error;
@@ -106,39 +63,43 @@ export const deleteService = async (id) => {
   }
 };
 
-// Packages
-export const getPackages = async () => {
-  const { data, error } = await supabase
-    .from("packages")
-    .select("*")
-    .order("id");
+// ==================== PACKAGES ====================
 
-  if (error) {
+export const getPackages = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("packages")
+      .select("*")
+      .order("id", { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
     console.error("Error fetching packages:", error);
     return [];
   }
-  return data || [];
 };
 
 export const savePackage = async (pkg) => {
   try {
     if (pkg.isNew) {
-      // Remove the isNew flag and id before inserting
-      // Let Supabase auto-generate the ID
-      const { isNew, id, ...packageData } = pkg;
-      const { data, error } = await supabase
-        .from("packages")
-        .insert([packageData])
-        .select();
+      const { error } = await supabase.from("packages").insert({
+        title: pkg.title,
+        includes: pkg.includes,
+        description: pkg.description,
+        images: pkg.images,
+      });
 
       if (error) throw error;
-      return true;
     } else {
-      // Update existing package
-      const { isNew, ...packageData } = pkg;
       const { error } = await supabase
         .from("packages")
-        .update(packageData)
+        .update({
+          title: pkg.title,
+          includes: pkg.includes,
+          description: pkg.description,
+          images: pkg.images,
+        })
         .eq("id", pkg.id);
 
       if (error) throw error;
@@ -162,80 +123,42 @@ export const deletePackage = async (id) => {
   }
 };
 
-// Settings
-export const getSettings = async () => {
-  const { data, error } = await supabase.from("settings").select("*").single();
+// ==================== BOOKINGS ====================
 
-  if (error) {
-    console.error("Error fetching settings:", error);
-    return { header_image: "", logo_image: "" };
-  }
-  return data || { header_image: "", logo_image: "" };
-};
-
-export const saveHeaderImage = async (imageUrl) => {
-  try {
-    const { error } = await supabase
-      .from("settings")
-      .upsert({ id: 1, header_image: imageUrl });
-
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.error("Error saving header image:", error);
-    return false;
-  }
-};
-
-export const saveLogo = async (imageUrl) => {
-  try {
-    const { error } = await supabase
-      .from("settings")
-      .upsert({ id: 1, logo_image: imageUrl });
-
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.error("Error saving logo:", error);
-    return false;
-  }
-};
-
-// Bookings
 export const getBookings = async () => {
-  const { data, error } = await supabase
-    .from("bookings")
-    .select("*")
-    .order("created_at", { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (error) {
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
     console.error("Error fetching bookings:", error);
     return [];
   }
-  return data || [];
 };
 
 export const saveBooking = async (booking) => {
   try {
-    const { error } = await supabase.from("bookings").insert([
-      {
-        type: booking.type,
-        service_or_package: booking.serviceOrPackage,
-        name: booking.name,
-        email: booking.email,
-        phone: booking.phone,
-        date: booking.date,
-        time: booking.time,
-        address: booking.address,
-        message: booking.message,
-        status: "pending",
-      },
-    ]);
+    console.log("Attempting to save booking:", booking);
 
-    if (error) throw error;
+    const { data, error } = await supabase.from("bookings").insert(booking);
+
+    if (error) {
+      console.error("Supabase error details:", error);
+      console.error("Error message:", error.message);
+      console.error("Error code:", error.code);
+      console.error("Error hint:", error.hint);
+      throw error;
+    }
+
+    console.log("Booking saved successfully:", data);
     return true;
   } catch (error) {
     console.error("Error saving booking:", error);
+    console.error("Full error object:", JSON.stringify(error, null, 2));
     return false;
   }
 };
@@ -252,5 +175,218 @@ export const updateBookingStatus = async (id, status) => {
   } catch (error) {
     console.error("Error updating booking status:", error);
     return false;
+  }
+};
+
+export const deleteBooking = async (id) => {
+  try {
+    const { error } = await supabase.from("bookings").delete().eq("id", id);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("Error deleting booking:", error);
+    return false;
+  }
+};
+
+// ==================== SETTINGS ====================
+
+export const getSettings = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("settings")
+      .select("*")
+      .limit(1);
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      return data[0];
+    }
+
+    return { header_image: "", logo_image: "" };
+  } catch (error) {
+    console.error("Error fetching settings:", error);
+    return { header_image: "", logo_image: "" };
+  }
+};
+
+export const saveLogo = async (logoData) => {
+  try {
+    const { data: settings, error: fetchError } = await supabase
+      .from("settings")
+      .select("id")
+      .limit(1);
+
+    if (fetchError) {
+      console.error("Error fetching settings:", fetchError);
+      return false;
+    }
+
+    const settingsId = settings && settings.length > 0 ? settings[0].id : null;
+
+    if (settingsId) {
+      const { error } = await supabase
+        .from("settings")
+        .update({ logo_image: logoData || "" })
+        .eq("id", settingsId);
+
+      if (error) {
+        console.error("Error updating logo:", error);
+        return false;
+      }
+    } else {
+      const { error } = await supabase
+        .from("settings")
+        .insert({ logo_image: logoData || "" });
+
+      if (error) {
+        console.error("Error inserting logo:", error);
+        return false;
+      }
+    }
+
+    console.log("Logo saved successfully:", logoData ? "Updated" : "Deleted");
+    return true;
+  } catch (error) {
+    console.error("Error saving logo:", error);
+    return false;
+  }
+};
+
+export const saveHeaderImage = async (headerData) => {
+  try {
+    const { data: settings, error: fetchError } = await supabase
+      .from("settings")
+      .select("id")
+      .limit(1);
+
+    if (fetchError) {
+      console.error("Error fetching settings:", fetchError);
+      return false;
+    }
+
+    const settingsId = settings && settings.length > 0 ? settings[0].id : null;
+
+    if (settingsId) {
+      const { error } = await supabase
+        .from("settings")
+        .update({ header_image: headerData || "[]" })
+        .eq("id", settingsId);
+
+      if (error) {
+        console.error("Error updating header:", error);
+        return false;
+      }
+    } else {
+      const { error } = await supabase
+        .from("settings")
+        .insert({ header_image: headerData || "[]" });
+
+      if (error) {
+        console.error("Error inserting header:", error);
+        return false;
+      }
+    }
+
+    console.log("Header images saved successfully");
+    return true;
+  } catch (error) {
+    console.error("Error saving header images:", error);
+    return false;
+  }
+};
+
+// ==================== DEFAULT DATA MIGRATION ====================
+
+export const migrateDefaultData = async () => {
+  try {
+    const { data: existingServices } = await supabase
+      .from("services")
+      .select("id")
+      .limit(1);
+
+    if (existingServices && existingServices.length > 0) {
+      console.log("Data already exists, skipping migration");
+      return;
+    }
+
+    console.log("Migrating default data...");
+
+    const defaultServices = [
+      {
+        title: "Deep Cleaning",
+        description:
+          "Thorough cleaning of your entire space, reaching every corner and crevice for a spotless result.",
+        images: [],
+      },
+      {
+        title: "Regular Cleaning",
+        description:
+          "Maintain a consistently clean environment with our scheduled cleaning service.",
+        images: [],
+      },
+      {
+        title: "Move In/Out Cleaning",
+        description:
+          "Comprehensive cleaning for properties during transitions, ensuring a fresh start or a perfect handover.",
+        images: [],
+      },
+    ];
+
+    const defaultPackages = [
+      {
+        title: "Basic Package",
+        includes: [
+          "Dusting all surfaces",
+          "Vacuuming all floors",
+          "Mopping hard floors",
+          "Bathroom cleaning",
+          "Kitchen cleaning",
+        ],
+        description: "Perfect for maintaining a clean home on a regular basis.",
+        images: [],
+      },
+      {
+        title: "Premium Package",
+        includes: [
+          "Everything in Basic Package",
+          "Window cleaning (interior)",
+          "Appliance cleaning",
+          "Detailed dusting (including baseboards)",
+          "Trash removal",
+        ],
+        description:
+          "A more comprehensive clean for those who want extra attention to detail.",
+        images: [],
+      },
+      {
+        title: "Deep Clean Package",
+        includes: [
+          "Everything in Premium Package",
+          "Inside cabinets and drawers",
+          "Oven and refrigerator deep clean",
+          "Wall washing",
+          "Ceiling fan cleaning",
+          "Light fixture cleaning",
+        ],
+        description:
+          "Our most thorough cleaning service for a completely refreshed space.",
+        images: [],
+      },
+    ];
+
+    for (const service of defaultServices) {
+      await supabase.from("services").insert(service);
+    }
+
+    for (const pkg of defaultPackages) {
+      await supabase.from("packages").insert(pkg);
+    }
+
+    console.log("Default data migrated successfully");
+  } catch (error) {
+    console.error("Error migrating default data:", error);
   }
 };

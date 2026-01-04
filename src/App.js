@@ -71,9 +71,9 @@ function HomePage() {
     },
     packagesGrid: {
       display: "grid",
-      gridTemplateColumns: "1fr",
+      gridTemplateColumns: "repeat(2, 1fr)",
       gap: "2rem",
-      maxWidth: "900px",
+      maxWidth: "1200px",
       margin: "0 auto",
     },
     loading: {

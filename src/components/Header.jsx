@@ -4,11 +4,7 @@ import { supabase } from "../supabase";
 
 const Header = () => {
   const [logoImage, setLogoImage] = useState("");
-  const [slides, setSlides] = useState([
-    "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1200",
-    "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=1200",
-    "https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?w=1200",
-  ]);
+  const [slides, setSlides] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
@@ -24,26 +20,24 @@ const Header = () => {
 
   const loadSettings = async () => {
     try {
-      const { data } = await supabase
-        .from("settings")
-        .select("*")
-        .limit(1)
-        .single();
+      const { data } = await supabase.from("settings").select("*").limit(1);
 
-      if (data) {
-        if (data.logo_image) {
-          setLogoImage(data.logo_image);
+      if (data && data.length > 0) {
+        const settings = data[0];
+
+        if (settings.logo_image) {
+          setLogoImage(settings.logo_image);
         }
 
-        if (data.header_image) {
+        if (settings.header_image) {
           try {
-            const images = JSON.parse(data.header_image);
+            const images = JSON.parse(settings.header_image);
             if (Array.isArray(images) && images.length > 0) {
               setSlides(images);
             }
           } catch {
             // If not JSON, use as single image
-            setSlides([data.header_image]);
+            setSlides([settings.header_image]);
           }
         }
       }

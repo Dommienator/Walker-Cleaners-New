@@ -13,27 +13,20 @@ const Bookings = ({ onBack }) => {
   }, []);
 
   const loadBookings = async () => {
-    const { getBookings } = await import("../supabase");
     const bookingsData = await getBookings();
     setBookings(bookingsData);
   };
 
-  const saveBookings = (updatedBookings) => {
-    setBookings(updatedBookings);
-  };
-
-  const updateBookingStatus = async (bookingId, newStatus) => {
-    const { updateBookingStatus: updateStatus } = await import("../supabase");
-    const success = await updateStatus(bookingId, newStatus);
+  const handleUpdateStatus = async (bookingId, newStatus) => {
+    const success = await updateBookingStatus(bookingId, newStatus);
     if (success) {
       await loadBookings();
     }
   };
 
-  const deleteBooking = async (bookingId) => {
+  const handleDeleteBooking = async (bookingId) => {
     if (window.confirm("Are you sure you want to delete this booking?")) {
-      const { deleteBooking: delBooking } = await import("../supabase");
-      const success = await delBooking(bookingId);
+      const success = await deleteBooking(bookingId);
       if (success) {
         await loadBookings();
       }
@@ -342,20 +335,21 @@ const Bookings = ({ onBack }) => {
                         style={{
                           textTransform: "capitalize",
                           fontWeight: "600",
-                          color:
-                            booking.type === "service" ? "#0066cc" : "#a02d6f",
+                          color: booking.service ? "#0066cc" : "#a02d6f",
                         }}
                       >
-                        {booking.type}
+                        {booking.service ? "service" : "package"}
                       </span>
                     </td>
-                    <td style={styles.td}>{booking.serviceOrPackage}</td>
+                    <td style={styles.td}>
+                      {booking.service || booking.package || "N/A"}
+                    </td>
                     <td style={styles.td}>{booking.address}</td>
                     <td style={styles.td}>
                       <select
                         value={booking.status}
                         onChange={(e) =>
-                          updateBookingStatus(booking.id, e.target.value)
+                          handleUpdateStatus(booking.id, e.target.value)
                         }
                         style={{
                           ...styles.select,
@@ -371,7 +365,7 @@ const Bookings = ({ onBack }) => {
                     </td>
                     <td style={styles.td}>
                       <button
-                        onClick={() => deleteBooking(booking.id)}
+                        onClick={() => handleDeleteBooking(booking.id)}
                         style={styles.deleteButton}
                       >
                         Delete
@@ -399,7 +393,6 @@ const Bookings = ({ onBack }) => {
 
               {[...Array(totalPages)].map((_, index) => {
                 const pageNum = index + 1;
-                // Show first page, last page, current page, and pages around current
                 if (
                   pageNum === 1 ||
                   pageNum === totalPages ||

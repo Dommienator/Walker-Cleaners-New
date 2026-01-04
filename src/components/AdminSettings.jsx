@@ -1,7 +1,7 @@
 // ============================================
-// AdminSettings.jsx - RESTORED WORKING VERSION
+// AdminSettings.jsx - COMPLETE FILE
 // ============================================
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const AdminSettings = ({
   logoImage: initialLogo,
@@ -9,16 +9,27 @@ const AdminSettings = ({
   onSave,
 }) => {
   const [logoImage, setLogoImage] = useState(initialLogo);
-  const [headerImages, setHeaderImages] = useState(
-    Array.isArray(initialHeader)
-      ? initialHeader
-      : initialHeader
-      ? [initialHeader]
-      : []
-  );
+  const [logoFileName, setLogoFileName] = useState("");
+  const [headerImages, setHeaderImages] = useState([]);
   const [logoFile, setLogoFile] = useState(null);
-  const [headerFiles, setHeaderFiles] = useState(null);
+  const [headerFilesChanged, setHeaderFilesChanged] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    setLogoImage(initialLogo);
+  }, [initialLogo]);
+
+  useEffect(() => {
+    const images = Array.isArray(initialHeader)
+      ? initialHeader.map((img, idx) => ({
+          data: img,
+          name: `Image ${idx + 1}`,
+        }))
+      : initialHeader
+      ? [{ data: initialHeader, name: "Image 1" }]
+      : [];
+    setHeaderImages(images);
+  }, [initialHeader]);
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
@@ -27,6 +38,7 @@ const AdminSettings = ({
         alert("Image too large. Max 5MB.");
         return;
       }
+      setLogoFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
         setLogoImage(reader.result);
@@ -48,8 +60,11 @@ const AdminSettings = ({
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setHeaderImages((prev) => [...prev, reader.result]);
-        setHeaderFiles(true);
+        setHeaderImages((prev) => [
+          ...prev,
+          { data: reader.result, name: file.name },
+        ]);
+        setHeaderFilesChanged(true);
         setHasChanges(true);
       };
       reader.readAsDataURL(file);
@@ -58,14 +73,15 @@ const AdminSettings = ({
 
   const removeHeaderImage = (index) => {
     setHeaderImages((prev) => prev.filter((_, i) => i !== index));
-    setHeaderFiles(true);
+    setHeaderFilesChanged(true);
     setHasChanges(true);
   };
 
   const deleteLogo = () => {
     if (window.confirm("Delete logo?")) {
-      setLogoImage(null);
-      setLogoFile(null);
+      setLogoImage("");
+      setLogoFileName("");
+      setLogoFile(""); // Empty string, not null - this will trigger save
       setHasChanges(true);
     }
   };
@@ -73,16 +89,35 @@ const AdminSettings = ({
   const clearAllHeaders = () => {
     if (window.confirm("Delete all header images?")) {
       setHeaderImages([]);
-      setHeaderFiles(true);
+      setHeaderFilesChanged(true);
       setHasChanges(true);
     }
   };
 
   const handleSave = async () => {
-    await onSave(logoFile, headerFiles ? headerImages : null);
+    console.log("=== SAVING SETTINGS ===");
+    console.log(
+      "Logo file to save:",
+      logoFile ? "YES (length: " + logoFile.length + ")" : "NO"
+    );
+    console.log("Header images changed:", headerFilesChanged);
+    console.log("Header images count:", headerImages.length);
+
+    const headerImagesData = headerImages.map((img) => img.data);
+    const headerImagesJson = headerFilesChanged
+      ? JSON.stringify(headerImagesData)
+      : null;
+
+    console.log("Calling onSave with:", {
+      logo: logoFile !== null,
+      header: headerImagesJson !== null,
+    });
+
+    await onSave(logoFile, headerImagesJson);
+
     setHasChanges(false);
     setLogoFile(null);
-    setHeaderFiles(null);
+    setHeaderFilesChanged(false);
   };
 
   const styles = {
@@ -111,6 +146,7 @@ const AdminSettings = ({
       fontSize: "1rem",
       display: "inline-block",
       marginBottom: "1rem",
+      marginRight: "0.5rem",
     },
     changeButton: {
       padding: "0.8rem 1.5rem",
@@ -150,16 +186,21 @@ const AdminSettings = ({
     },
     imageGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
       gap: "1rem",
       marginTop: "1rem",
     },
     imageItem: {
       position: "relative",
-      paddingTop: "66%",
       borderRadius: "8px",
       overflow: "hidden",
       boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      background: "#fff",
+    },
+    imageContainer: {
+      position: "relative",
+      paddingTop: "66%",
+      overflow: "hidden",
     },
     image: {
       position: "absolute",
@@ -168,6 +209,16 @@ const AdminSettings = ({
       width: "100%",
       height: "100%",
       objectFit: "cover",
+    },
+    imageName: {
+      padding: "0.5rem",
+      fontSize: "0.85rem",
+      color: "#333",
+      background: "#f8f9fa",
+      textAlign: "center",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
     },
     removeButton: {
       position: "absolute",
@@ -186,6 +237,7 @@ const AdminSettings = ({
       alignItems: "center",
       justifyContent: "center",
       lineHeight: "1",
+      zIndex: 10,
     },
     saveButton: {
       padding: "1rem 2rem",
@@ -204,9 +256,9 @@ const AdminSettings = ({
       fontStyle: "italic",
       marginTop: "1rem",
     },
-    hint: {
-      color: "#666",
+    fileName: {
       fontSize: "0.9rem",
+      color: "#666",
       marginTop: "0.5rem",
       fontStyle: "italic",
     },
@@ -242,11 +294,14 @@ const AdminSettings = ({
         )}
 
         {logoImage ? (
-          <img
-            src={logoImage}
-            alt="Logo preview"
-            style={{ ...styles.previewImage, maxHeight: "100px" }}
-          />
+          <>
+            <img
+              src={logoImage}
+              alt="Logo preview"
+              style={{ ...styles.previewImage, maxHeight: "100px" }}
+            />
+            {logoFileName && <p style={styles.fileName}>{logoFileName}</p>}
+          </>
         ) : (
           <p style={styles.noImage}>No logo uploaded</p>
         )}
@@ -279,18 +334,19 @@ const AdminSettings = ({
           <div style={styles.imageGrid}>
             {headerImages.map((img, index) => (
               <div key={index} style={styles.imageItem}>
-                <img
-                  src={img}
-                  alt={`Header ${index + 1}`}
-                  style={styles.image}
-                />
-                <button
-                  onClick={() => removeHeaderImage(index)}
-                  style={styles.removeButton}
-                  title="Remove image"
-                >
-                  ×
-                </button>
+                <div style={styles.imageContainer}>
+                  <img src={img.data} alt={img.name} style={styles.image} />
+                  <button
+                    onClick={() => removeHeaderImage(index)}
+                    style={styles.removeButton}
+                    title="Remove image"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div style={styles.imageName} title={img.name}>
+                  {img.name}
+                </div>
               </div>
             ))}
           </div>
