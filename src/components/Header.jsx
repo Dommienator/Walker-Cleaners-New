@@ -34,10 +34,12 @@ const Header = () => {
             const images = JSON.parse(settings.header_image);
             if (Array.isArray(images) && images.length > 0) {
               setSlides(images);
+              setCurrentSlide(0);
             }
           } catch {
             // If not JSON, use as single image
             setSlides([settings.header_image]);
+            setCurrentSlide(0);
           }
         }
       }
@@ -49,7 +51,7 @@ const Header = () => {
   const styles = {
     header: {
       position: "relative",
-      height: "500px",
+      height: "600px",
       overflow: "hidden",
     },
     slideshow: {
@@ -77,13 +79,16 @@ const Header = () => {
       width: "100%",
       height: "100%",
       background:
-        "linear-gradient(135deg, rgba(0, 61, 122, 0.85) 0%, rgba(0, 102, 204, 0.85) 100%)",
+        "linear-gradient(135deg, rgba(0, 61, 122, 0.25) 0%, rgba(0, 102, 204, 0.25) 100%)",
       zIndex: 2,
     },
     nav: {
-      position: "relative",
+      position: "absolute",
+      top: "0.1 rem",
+      left: 0,
+      right: 0,
       zIndex: 3,
-      padding: "1.5rem 0",
+      padding: "0",
     },
     container: {
       maxWidth: "1200px",
@@ -96,21 +101,12 @@ const Header = () => {
     logoLink: {
       textDecoration: "none",
       display: "flex",
-      flexDirection: "column",
-      alignItems: "flex-start",
-      gap: "0.3rem",
+      alignItems: "center",
     },
     logo: {
-      height: "60px",
+      height: "80px",
       width: "auto",
       objectFit: "contain",
-    },
-    companyName: {
-      fontSize: "1.5rem",
-      fontWeight: "700",
-      color: "white",
-      margin: 0,
-      textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
     },
     navLinks: {
       display: "flex",
@@ -140,13 +136,16 @@ const Header = () => {
       boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
     },
     heroContent: {
-      position: "relative",
+      position: "absolute",
+      top: "60%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
       zIndex: 3,
       textAlign: "center",
       color: "white",
-      padding: "4rem 2rem",
+      padding: "2rem",
       maxWidth: "800px",
-      margin: "0 auto",
+      width: "100%",
     },
     heroTitle: {
       fontSize: "3.5rem",
@@ -195,7 +194,6 @@ const Header = () => {
 
   return (
     <header style={styles.header}>
-      {/* Slideshow Background */}
       <div style={styles.slideshow}>
         {slides.map((slide, index) => (
           <div
@@ -209,10 +207,8 @@ const Header = () => {
         ))}
       </div>
 
-      {/* Overlay */}
       <div style={styles.overlay} />
 
-      {/* Navigation */}
       <div style={styles.nav}>
         <div style={styles.container}>
           <Link to="/" style={styles.logoLink}>
@@ -223,7 +219,6 @@ const Header = () => {
                 style={styles.logo}
               />
             )}
-            <span style={styles.companyName}>Walker Cleaners</span>
           </Link>
 
           <nav style={styles.navLinks}>
@@ -279,13 +274,11 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Hero Content */}
       <div style={styles.heroContent}>
         <h1 style={styles.heroTitle}>Professional Cleaning Services</h1>
         <p style={styles.heroSubtitle}>Your Mess is our Mission</p>
       </div>
 
-      {/* Slideshow Dots */}
       <div style={styles.dots}>
         {slides.map((_, index) => (
           <button
