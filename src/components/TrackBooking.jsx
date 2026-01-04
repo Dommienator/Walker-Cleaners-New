@@ -23,17 +23,17 @@ const TrackBooking = () => {
     try {
       const allBookings = await getBookings();
 
-      const found = allBookings.find(
+      const found = allBookings.filter(
         (b) => b.phone === phone || (bookingId && b.id === parseInt(bookingId))
       );
 
-      if (found) {
+      if (found.length > 0) {
         setResult(found);
       } else {
         setResult({ notFound: true });
       }
     } catch (error) {
-      console.error("Error searching bookings:", error);
+      console.error("Error searching bookings:", error.message, error);
       setResult({ notFound: true });
     } finally {
       setSearching(false);
@@ -145,6 +145,15 @@ const TrackBooking = () => {
       padding: "2rem",
       animation: "slideUp 0.4s ease-out",
     },
+    bookingHeader: {
+      color: "#003d7a",
+      fontSize: "1.3rem",
+      fontWeight: "700",
+      marginBottom: "1rem",
+      marginTop: 0,
+      paddingBottom: "0.5rem",
+      borderBottom: "2px solid #0066cc",
+    },
     statusBadge: {
       display: "inline-flex",
       alignItems: "center",
@@ -215,45 +224,54 @@ const TrackBooking = () => {
             </button>
           </form>
 
-          {result && !result.notFound && (
-            <div style={styles.resultCard}>
-              <div
-                style={{
-                  ...styles.statusBadge,
-                  background: getStatusColor(result.status),
-                }}
-              >
-                {getStatusIcon(result.status)}
-                {result.status.charAt(0).toUpperCase() + result.status.slice(1)}
-              </div>
+          {result && !result.notFound && Array.isArray(result) && (
+            <>
+              {result.map((booking, index) => (
+                <div key={booking.id} style={styles.resultCard}>
+                  <h3 style={styles.bookingHeader}>Booking #{index + 1}</h3>
 
-              <div style={styles.infoGrid}>
-                <div style={styles.infoRow}>
-                  <span style={styles.label}>Booking ID:</span>
-                  <span style={styles.value}>#{result.id}</span>
+                  <div
+                    style={{
+                      ...styles.statusBadge,
+                      background: getStatusColor(booking.status),
+                    }}
+                  >
+                    {getStatusIcon(booking.status)}
+                    {booking.status.charAt(0).toUpperCase() +
+                      booking.status.slice(1)}
+                  </div>
+
+                  <div style={styles.infoGrid}>
+                    <div style={styles.infoRow}>
+                      <span style={styles.label}>Booking ID:</span>
+                      <span style={styles.value}>#{booking.id}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                      <span style={styles.label}>Service/Package:</span>
+                      <span style={styles.value}>
+                        {booking.service_or_package}
+                      </span>
+                    </div>
+                    <div style={styles.infoRow}>
+                      <span style={styles.label}>Type:</span>
+                      <span style={styles.value}>{booking.type}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                      <span style={styles.label}>Date:</span>
+                      <span style={styles.value}>{booking.date}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                      <span style={styles.label}>Time:</span>
+                      <span style={styles.value}>{booking.time}</span>
+                    </div>
+                    <div style={styles.infoRow}>
+                      <span style={styles.label}>Location:</span>
+                      <span style={styles.value}>{booking.address}</span>
+                    </div>
+                  </div>
                 </div>
-                <div style={styles.infoRow}>
-                  <span style={styles.label}>Service/Package:</span>
-                  <span style={styles.value}>{result.service_or_package}</span>
-                </div>
-                <div style={styles.infoRow}>
-                  <span style={styles.label}>Type:</span>
-                  <span style={styles.value}>{result.type}</span>
-                </div>
-                <div style={styles.infoRow}>
-                  <span style={styles.label}>Date:</span>
-                  <span style={styles.value}>{result.date}</span>
-                </div>
-                <div style={styles.infoRow}>
-                  <span style={styles.label}>Time:</span>
-                  <span style={styles.value}>{result.time}</span>
-                </div>
-                <div style={styles.infoRow}>
-                  <span style={styles.label}>Location:</span>
-                  <span style={styles.value}>{result.address}</span>
-                </div>
-              </div>
-            </div>
+              ))}
+            </>
           )}
 
           {result && result.notFound && (
