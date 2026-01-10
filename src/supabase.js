@@ -1,5 +1,27 @@
 import { createClient } from "@supabase/supabase-js";
+// Compress base64 images to reduce size
+const compressImage = (base64, maxWidth = 800) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let width = img.width;
+      let height = img.height;
 
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", 0.7));
+    };
+    img.src = base64;
+  });
+};
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
@@ -24,11 +46,21 @@ export const getServices = async () => {
 
 export const saveService = async (service) => {
   try {
+    // Compress images if they exist
+    let compressedImages = service.images || [];
+    if (compressedImages.length > 0) {
+      compressedImages = await Promise.all(
+        compressedImages.map((img) =>
+          img.startsWith("data:image") ? compressImage(img, 600) : img
+        )
+      );
+    }
+
     if (service.isNew) {
       const { error } = await supabase.from("services").insert({
         title: service.title,
         description: service.description,
-        images: service.images,
+        images: compressedImages,
       });
 
       if (error) throw error;
@@ -38,7 +70,7 @@ export const saveService = async (service) => {
         .update({
           title: service.title,
           description: service.description,
-          images: service.images,
+          images: compressedImages,
         })
         .eq("id", service.id);
 
@@ -82,12 +114,22 @@ export const getPackages = async () => {
 
 export const savePackage = async (pkg) => {
   try {
+    // Compress images if they exist
+    let compressedImages = pkg.images || [];
+    if (compressedImages.length > 0) {
+      compressedImages = await Promise.all(
+        compressedImages.map((img) =>
+          img.startsWith("data:image") ? compressImage(img, 600) : img
+        )
+      );
+    }
+
     if (pkg.isNew) {
       const { error } = await supabase.from("packages").insert({
         title: pkg.title,
         includes: pkg.includes,
         description: pkg.description,
-        images: pkg.images,
+        images: compressedImages,
       });
 
       if (error) throw error;
@@ -98,7 +140,7 @@ export const savePackage = async (pkg) => {
           title: pkg.title,
           includes: pkg.includes,
           description: pkg.description,
-          images: pkg.images,
+          images: compressedImages,
         })
         .eq("id", pkg.id);
 
@@ -110,7 +152,6 @@ export const savePackage = async (pkg) => {
     return false;
   }
 };
-
 export const deletePackage = async (id) => {
   try {
     const { error } = await supabase.from("packages").delete().eq("id", id);

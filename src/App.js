@@ -9,7 +9,7 @@ import BookingForm from "./components/BookingForm";
 import ServiceDetail from "./components/ServiceDetail";
 import PackageDetail from "./components/PackageDetail";
 import TrackBooking from "./components/TrackBooking";
-import { getServices, getPackages, migrateDefaultData } from "./supabase";
+import { getServices, getPackages } from "./supabase";
 
 function HomePage() {
   const [services, setServices] = useState([]);
@@ -21,21 +21,18 @@ function HomePage() {
   }, []);
 
   const loadData = async () => {
-    try {
-      // Ensure default data is migrated
-      await migrateDefaultData();
+    console.log("Loading data from Supabase...");
+    setLoading(true);
 
-      // Load data from Supabase
-      const servicesData = await getServices();
-      const packagesData = await getPackages();
+    const servicesData = await getServices();
+    const packagesData = await getPackages();
 
-      setServices(servicesData);
-      setPackages(packagesData);
-    } catch (error) {
-      console.error("Error loading data:", error);
-    } finally {
-      setLoading(false);
-    }
+    console.log("Services:", servicesData.length);
+    console.log("Packages:", packagesData.length);
+
+    setServices(servicesData);
+    setPackages(packagesData);
+    setLoading(false);
   };
 
   const styles = {
@@ -48,38 +45,41 @@ function HomePage() {
     container: {
       maxWidth: "1200px",
       margin: "0 auto",
-      padding: "0 2rem",
+      padding: "0 1rem", // Changed from 2rem
     },
     section: {
-      padding: "4rem 0",
+      padding: "2rem 0", // Changed from 4rem
     },
     packagesSection: {
-      padding: "4rem 0",
+      padding: "2rem 0", // Changed from 4rem
       background: "white",
     },
     sectionTitle: {
-      fontSize: "2.5rem",
+      fontSize: "clamp(1.5rem, 5vw, 2.5rem)", // Responsive font size
       color: "#003d7a",
       textAlign: "center",
-      marginBottom: "3rem",
+      marginBottom: "2rem", // Changed from 3rem
       fontWeight: "bold",
+      padding: "0 1rem", // Added padding
     },
     servicesGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-      gap: "2rem",
+      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", // Changed from 300px
+      gap: "1.5rem", // Changed from 2rem
+      padding: "0 0.5rem", // Added padding
     },
     packagesGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(2, 1fr)",
-      gap: "2rem",
-      maxWidth: "1200px",
+      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", // Changed to 2 columns
+      gap: "1.5rem", // Changed from 2rem
+      maxWidth: "1200px", // Changed from 900px
       margin: "0 auto",
+      padding: "0 0.5rem", // Added padding
     },
     loading: {
       textAlign: "center",
-      padding: "4rem",
-      fontSize: "1.2rem",
+      padding: "2rem", // Changed from 4rem
+      fontSize: "1.1rem", // Changed from 1.2rem
       color: "#0066cc",
     },
   };
@@ -88,7 +88,7 @@ function HomePage() {
     return (
       <div style={styles.app}>
         <Header />
-        <div style={styles.loading}>Loading...</div>
+        <div style={styles.loading}>Loading services and packages...</div>
         <Footer />
       </div>
     );
@@ -103,7 +103,7 @@ function HomePage() {
           <h2 style={styles.sectionTitle}>Our Services</h2>
           {services.length === 0 ? (
             <p style={{ textAlign: "center", color: "#666" }}>
-              No services available yet.
+              No services available. Please add services from the admin panel.
             </p>
           ) : (
             <div style={styles.servicesGrid}>
@@ -120,7 +120,7 @@ function HomePage() {
           <h2 style={styles.sectionTitle}>Service Packages</h2>
           {packages.length === 0 ? (
             <p style={{ textAlign: "center", color: "#666" }}>
-              No packages available yet.
+              No packages available. Please add packages from the admin panel.
             </p>
           ) : (
             <div style={styles.packagesGrid}>

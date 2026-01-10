@@ -15,7 +15,6 @@ import {
   getSettings,
   saveHeaderImage,
   saveLogo,
-  migrateDefaultData,
 } from "../supabase";
 
 const Admin = () => {
@@ -53,8 +52,6 @@ const Admin = () => {
 
   const loadData = async () => {
     console.log("Loading admin data...");
-
-    await migrateDefaultData();
 
     const servicesData = await getServices();
     const packagesData = await getPackages();

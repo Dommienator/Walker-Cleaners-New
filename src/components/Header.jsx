@@ -273,9 +273,8 @@ const Header = () => {
           </nav>
         </div>
       </div>
-
       <div style={styles.heroContent}>
-        <h1 style={styles.heroTitle}>Professional Cleaning Services</h1>
+        <h1 style={styles.heroTitle}>Walker Cleaners</h1>
         <p style={styles.heroSubtitle}>Your Mess is our Mission</p>
       </div>
 
