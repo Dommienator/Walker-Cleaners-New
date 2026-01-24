@@ -6,9 +6,14 @@ const Header = () => {
   const [logoImage, setLogoImage] = useState("");
   const [slides, setSlides] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [services, setServices] = useState([]);
+  const [packages, setPackages] = useState([]);
+  const [showServicesDropdown, setShowServicesDropdown] = useState(false);
+  const [showPackagesDropdown, setShowPackagesDropdown] = useState(false);
 
   useEffect(() => {
     loadSettings();
+    loadServicesAndPackages();
   }, []);
 
   useEffect(() => {
@@ -37,7 +42,6 @@ const Header = () => {
               setCurrentSlide(0);
             }
           } catch {
-            // If not JSON, use as single image
             setSlides([settings.header_image]);
             setCurrentSlide(0);
           }
@@ -45,6 +49,25 @@ const Header = () => {
       }
     } catch (error) {
       console.error("Error loading settings:", error);
+    }
+  };
+
+  const loadServicesAndPackages = async () => {
+    try {
+      const { data: servicesData } = await supabase
+        .from("services")
+        .select("id, title")
+        .order("id", { ascending: true });
+
+      const { data: packagesData } = await supabase
+        .from("packages")
+        .select("id, title")
+        .order("id", { ascending: true });
+
+      setServices(servicesData || []);
+      setPackages(packagesData || []);
+    } catch (error) {
+      console.error("Error loading services/packages:", error);
     }
   };
 
@@ -113,14 +136,45 @@ const Header = () => {
       gap: "2.5rem",
       alignItems: "center",
     },
+    navLinkWrapper: {
+      position: "relative",
+      zIndex: 100000,
+    },
     navLink: {
       color: "white",
       textDecoration: "none",
       fontSize: "1.1rem",
-      fontWeight: "600",
+      fontWeight: "700",
+      textTransform: "uppercase",
       transition: "opacity 0.2s",
       cursor: "pointer",
       textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
+    },
+    dropdown: {
+      position: "absolute",
+      top: "100%",
+      left: "50%",
+      transform: "translateX(-50%)",
+      marginTop: "0",
+      paddingTop: "0.5rem",
+      background: "transparent",
+      minWidth: "220px",
+      zIndex: 99999,
+    },
+    dropdownContent: {
+      background: "white",
+      borderRadius: "8px",
+      boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+      overflow: "hidden",
+    },
+    dropdownItem: {
+      padding: "0.8rem 1.2rem",
+      color: "#333",
+      textDecoration: "none",
+      display: "block",
+      cursor: "pointer",
+      borderBottom: "1px solid #f0f0f0",
+      fontSize: "0.95rem",
     },
     button: {
       background: "white",
@@ -140,7 +194,7 @@ const Header = () => {
       top: "60%",
       left: "50%",
       transform: "translate(-50%, -50%)",
-      zIndex: 3,
+      zIndex: 2,
       textAlign: "center",
       color: "white",
       padding: "2rem",
@@ -222,30 +276,94 @@ const Header = () => {
           </Link>
 
           <nav style={styles.navLinks}>
-            <a
-              href="#services"
-              style={styles.navLink}
-              onClick={(e) => {
-                e.preventDefault();
-                scrollToSection("services");
-              }}
-              onMouseOver={(e) => (e.target.style.opacity = "0.7")}
-              onMouseOut={(e) => (e.target.style.opacity = "1")}
+            <div
+              style={styles.navLinkWrapper}
+              onMouseEnter={() => setShowServicesDropdown(true)}
+              onMouseLeave={() => setShowServicesDropdown(false)}
             >
-              Services
-            </a>
-            <a
-              href="#packages"
-              style={styles.navLink}
-              onClick={(e) => {
-                e.preventDefault();
-                scrollToSection("packages");
-              }}
-              onMouseOver={(e) => (e.target.style.opacity = "0.7")}
-              onMouseOut={(e) => (e.target.style.opacity = "1")}
+              <a
+                href="#services"
+                style={styles.navLink}
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection("services");
+                }}
+                onMouseOver={(e) => (e.target.style.opacity = "0.7")}
+                onMouseOut={(e) => (e.target.style.opacity = "1")}
+              >
+                Services
+              </a>
+              {showServicesDropdown && services.length > 0 && (
+                <div style={styles.dropdown}>
+                  <div style={styles.dropdownContent}>
+                    {services.map((service) => (
+                      <a
+                        key={service.id}
+                        href="#services"
+                        style={styles.dropdownItem}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          scrollToSection("services");
+                        }}
+                        onMouseOver={(e) =>
+                          (e.target.style.background = "#f5f5f5")
+                        }
+                        onMouseOut={(e) =>
+                          (e.target.style.background = "white")
+                        }
+                      >
+                        {service.title}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div
+              style={styles.navLinkWrapper}
+              onMouseEnter={() => setShowPackagesDropdown(true)}
+              onMouseLeave={() => setShowPackagesDropdown(false)}
             >
-              Packages
-            </a>
+              <a
+                href="#packages"
+                style={styles.navLink}
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection("packages");
+                }}
+                onMouseOver={(e) => (e.target.style.opacity = "0.7")}
+                onMouseOut={(e) => (e.target.style.opacity = "1")}
+              >
+                Packages
+              </a>
+              {showPackagesDropdown && packages.length > 0 && (
+                <div style={styles.dropdown}>
+                  <div style={styles.dropdownContent}>
+                    {packages.map((pkg) => (
+                      <a
+                        key={pkg.id}
+                        href="#packages"
+                        style={styles.dropdownItem}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          scrollToSection("packages");
+                        }}
+                        onMouseOver={(e) =>
+                          (e.target.style.background = "#f5f5f5")
+                        }
+                        onMouseOut={(e) =>
+                          (e.target.style.background = "white")
+                        }
+                      >
+                        {pkg.title}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <a
               href="https://walkercleaners.blogspot.com"
               target="_blank"
@@ -273,6 +391,7 @@ const Header = () => {
           </nav>
         </div>
       </div>
+
       <div style={styles.heroContent}>
         <h1 style={styles.heroTitle}>Walker Cleaners</h1>
         <p style={styles.heroSubtitle}>Your Mess is our Mission</p>
