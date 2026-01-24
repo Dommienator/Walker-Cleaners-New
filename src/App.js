@@ -45,41 +45,41 @@ function HomePage() {
     container: {
       maxWidth: "1200px",
       margin: "0 auto",
-      padding: "0 1rem", // Changed from 2rem
+      padding: "0 1rem",
     },
     section: {
-      padding: "2rem 0", // Changed from 4rem
+      padding: "2rem 0",
     },
     packagesSection: {
-      padding: "2rem 0", // Changed from 4rem
+      padding: "2rem 0",
       background: "white",
     },
     sectionTitle: {
-      fontSize: "clamp(1.5rem, 5vw, 2.5rem)", // Responsive font size
+      fontSize: "clamp(1.5rem, 5vw, 2.5rem)",
       color: "#003d7a",
       textAlign: "center",
-      marginBottom: "2rem", // Changed from 3rem
+      marginBottom: "2rem",
       fontWeight: "bold",
-      padding: "0 1rem", // Added padding
+      padding: "0 1rem",
     },
     servicesGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", // Changed from 300px
-      gap: "1.5rem", // Changed from 2rem
-      padding: "0 0.5rem", // Added padding
+      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+      gap: "1.5rem",
+      padding: "0 0.5rem",
     },
     packagesGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", // Changed to 2 columns
-      gap: "1.5rem", // Changed from 2rem
-      maxWidth: "1200px", // Changed from 900px
+      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+      gap: "1.5rem",
+      maxWidth: "1200px",
       margin: "0 auto",
-      padding: "0 0.5rem", // Added padding
+      padding: "0 0.5rem",
     },
     loading: {
       textAlign: "center",
-      padding: "2rem", // Changed from 4rem
-      fontSize: "1.1rem", // Changed from 1.2rem
+      padding: "2rem",
+      fontSize: "1.1rem",
       color: "#0066cc",
     },
   };
@@ -108,7 +108,9 @@ function HomePage() {
           ) : (
             <div style={styles.servicesGrid}>
               {services.map((service) => (
-                <ServiceCard key={service.id} service={service} />
+                <div key={service.id} id={`service-${service.id}`}>
+                  <ServiceCard service={service} />
+                </div>
               ))}
             </div>
           )}
@@ -125,7 +127,9 @@ function HomePage() {
           ) : (
             <div style={styles.packagesGrid}>
               {packages.map((pkg) => (
-                <PackageCard key={pkg.id} package={pkg} />
+                <div key={pkg.id} id={`package-${pkg.id}`}>
+                  <PackageCard package={pkg} />
+                </div>
               ))}
             </div>
           )}

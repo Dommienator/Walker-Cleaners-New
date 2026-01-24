@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../supabase";
 
 const Header = () => {
@@ -10,6 +10,7 @@ const Header = () => {
   const [packages, setPackages] = useState([]);
   const [showServicesDropdown, setShowServicesDropdown] = useState(false);
   const [showPackagesDropdown, setShowPackagesDropdown] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadSettings();
@@ -246,6 +247,29 @@ const Header = () => {
     }
   };
 
+  const scrollToItem = (itemId, type) => {
+    // First navigate to home page if not already there
+    if (window.location.pathname !== "/") {
+      navigate("/");
+      // Wait for navigation and DOM to update
+      setTimeout(() => {
+        const element = document.getElementById(`${type}-${itemId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          // Add a highlight effect
+          element.style.animation = "highlight 2s ease-in-out";
+        }
+      }, 300);
+    } else {
+      const element = document.getElementById(`${type}-${itemId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Add a highlight effect
+        element.style.animation = "highlight 2s ease-in-out";
+      }
+    }
+  };
+
   return (
     <header style={styles.header}>
       <div style={styles.slideshow}>
@@ -303,7 +327,8 @@ const Header = () => {
                         style={styles.dropdownItem}
                         onClick={(e) => {
                           e.preventDefault();
-                          scrollToSection("services");
+                          scrollToItem(service.id, "service");
+                          setShowServicesDropdown(false);
                         }}
                         onMouseOver={(e) =>
                           (e.target.style.background = "#f5f5f5")
@@ -347,7 +372,8 @@ const Header = () => {
                         style={styles.dropdownItem}
                         onClick={(e) => {
                           e.preventDefault();
-                          scrollToSection("packages");
+                          scrollToItem(pkg.id, "package");
+                          setShowPackagesDropdown(false);
                         }}
                         onMouseOver={(e) =>
                           (e.target.style.background = "#f5f5f5")
@@ -391,7 +417,6 @@ const Header = () => {
           </nav>
         </div>
       </div>
-
       <div style={styles.heroContent}>
         <h1 style={styles.heroTitle}>Walker Cleaners</h1>
         <p style={styles.heroSubtitle}>Your Mess is our Mission</p>
