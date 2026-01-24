@@ -19,15 +19,15 @@ const ServiceDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const loadService = async () => {
+      const services = await getServices();
+      const found = services.find((s) => s.id === parseInt(id));
+      setService(found);
+      setLoading(false);
+    };
+
     loadService();
   }, [id]);
-
-  const loadService = async () => {
-    const services = await getServices();
-    const found = services.find((s) => s.id === parseInt(id));
-    setService(found);
-    setLoading(false);
-  };
 
   if (loading) {
     return (
@@ -69,7 +69,7 @@ const ServiceDetail = () => {
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
-      `Hi, I'd like to enquire about ${service.title}`
+      `Hi, I'd like to enquire about ${service.title}`,
     );
     window.open(`https://wa.me/254768323230?text=${message}`, "_blank");
   };
@@ -77,7 +77,7 @@ const ServiceDetail = () => {
   const handleEmail = () => {
     const subject = encodeURIComponent(`Enquiry about ${service.title}`);
     const body = encodeURIComponent(
-      `Hi,\n\nI'd like to enquire about ${service.title}.\n\nThank you.`
+      `Hi,\n\nI'd like to enquire about ${service.title}.\n\nThank you.`,
     );
     window.location.href = `mailto:walkercleanersltd@gmail.com?subject=${subject}&body=${body}`;
   };
@@ -85,8 +85,8 @@ const ServiceDetail = () => {
   const handleBook = () => {
     navigate(
       `/book?type=service&id=${service.id}&name=${encodeURIComponent(
-        service.title
-      )}`
+        service.title,
+      )}`,
     );
   };
 

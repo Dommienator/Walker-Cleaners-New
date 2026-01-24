@@ -19,15 +19,15 @@ const PackageDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const loadPackage = async () => {
+      const packages = await getPackages();
+      const found = packages.find((p) => p.id === parseInt(id));
+      setPkg(found);
+      setLoading(false);
+    };
+
     loadPackage();
   }, [id]);
-
-  const loadPackage = async () => {
-    const packages = await getPackages();
-    const found = packages.find((p) => p.id === parseInt(id));
-    setPkg(found);
-    setLoading(false);
-  };
 
   if (loading) {
     return (
@@ -69,7 +69,7 @@ const PackageDetail = () => {
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
-      `Hi, I'd like to enquire about ${pkg.title}`
+      `Hi, I'd like to enquire about ${pkg.title}`,
     );
     window.open(`https://wa.me/254768323230?text=${message}`, "_blank");
   };
@@ -77,14 +77,14 @@ const PackageDetail = () => {
   const handleEmail = () => {
     const subject = encodeURIComponent(`Enquiry about ${pkg.title}`);
     const body = encodeURIComponent(
-      `Hi,\n\nI'd like to enquire about ${pkg.title}.\n\nThank you.`
+      `Hi,\n\nI'd like to enquire about ${pkg.title}.\n\nThank you.`,
     );
     window.location.href = `mailto:walkercleanersltd@gmail.com?subject=${subject}&body=${body}`;
   };
 
   const handleBook = () => {
     navigate(
-      `/book?type=package&id=${pkg.id}&name=${encodeURIComponent(pkg.title)}`
+      `/book?type=package&id=${pkg.id}&name=${encodeURIComponent(pkg.title)}`,
     );
   };
 
