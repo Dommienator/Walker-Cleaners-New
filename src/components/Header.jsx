@@ -76,7 +76,8 @@ const Header = () => {
     header: {
       position: "relative",
       height: "600px",
-      overflow: "hidden",
+      overflow: "visible",
+      zIndex: 1,
     },
     slideshow: {
       position: "absolute",
@@ -85,6 +86,7 @@ const Header = () => {
       width: "100%",
       height: "100%",
       zIndex: 1,
+      overflow: "hidden",
     },
     slide: {
       position: "absolute",
@@ -111,7 +113,7 @@ const Header = () => {
       top: "0.1 rem",
       left: 0,
       right: 0,
-      zIndex: 3,
+      zIndex: 100000,
       padding: "0",
     },
     container: {
