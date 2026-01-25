@@ -10,11 +10,19 @@ const Header = () => {
   const [packages, setPackages] = useState([]);
   const [showServicesDropdown, setShowServicesDropdown] = useState(false);
   const [showPackagesDropdown, setShowPackagesDropdown] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     loadSettings();
     loadServicesAndPackages();
+
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -128,11 +136,36 @@ const Header = () => {
       textDecoration: "none",
       display: "flex",
       alignItems: "center",
+      background: "transparent",
+      padding: "0.5rem",
     },
     logo: {
       height: "80px",
       width: "auto",
       objectFit: "contain",
+      filter: "drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))",
+      backgroundColor: "transparent",
+      mixBlendMode: "normal",
+    },
+    floatingBackToTop: {
+      position: "fixed",
+      bottom: "30px",
+      right: "30px",
+      background: "rgba(0, 102, 204, 0.9)",
+      color: "white",
+      padding: "0.7rem 1.2rem",
+      borderRadius: "8px",
+      border: "none",
+      cursor: "pointer",
+      fontSize: "0.9rem",
+      fontWeight: "600",
+      transition: "all 0.3s ease",
+      zIndex: 99999,
+      boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+      textDecoration: "none",
+      display: "flex",
+      alignItems: "center",
+      gap: "0.3rem",
     },
     navLinks: {
       display: "flex",
@@ -242,6 +275,10 @@ const Header = () => {
     },
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -273,170 +310,190 @@ const Header = () => {
   };
 
   return (
-    <header style={styles.header}>
-      <div style={styles.slideshow}>
-        {slides.map((slide, index) => (
-          <div
-            key={index}
-            style={{
-              ...styles.slide,
-              backgroundImage: `url(${slide})`,
-              opacity: currentSlide === index ? 1 : 0,
-            }}
-          />
-        ))}
-      </div>
-
-      <div style={styles.overlay} />
-
-      <div style={styles.nav}>
-        <div style={styles.container}>
-          <Link to="/" style={styles.logoLink}>
-            {logoImage && (
-              <img
-                src={logoImage}
-                alt="Walker Cleaners Logo"
-                style={styles.logo}
-              />
-            )}
-          </Link>
-
-          <nav style={styles.navLinks}>
+    <>
+      <header style={styles.header}>
+        <div style={styles.slideshow}>
+          {slides.map((slide, index) => (
             <div
-              style={styles.navLinkWrapper}
-              onMouseEnter={() => setShowServicesDropdown(true)}
-              onMouseLeave={() => setShowServicesDropdown(false)}
-            >
-              <a
-                href="#services"
-                style={styles.navLink}
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToSection("services");
-                }}
-                onMouseOver={(e) => (e.target.style.opacity = "0.7")}
-                onMouseOut={(e) => (e.target.style.opacity = "1")}
-              >
-                Services
-              </a>
-              {showServicesDropdown && services.length > 0 && (
-                <div style={styles.dropdown}>
-                  <div style={styles.dropdownContent}>
-                    {services.map((service) => (
-                      <a
-                        key={service.id}
-                        href="#services"
-                        style={styles.dropdownItem}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          scrollToItem(service.id, "service");
-                          setShowServicesDropdown(false);
-                        }}
-                        onMouseOver={(e) =>
-                          (e.target.style.background = "#f5f5f5")
-                        }
-                        onMouseOut={(e) =>
-                          (e.target.style.background = "white")
-                        }
-                      >
-                        {service.title}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div
-              style={styles.navLinkWrapper}
-              onMouseEnter={() => setShowPackagesDropdown(true)}
-              onMouseLeave={() => setShowPackagesDropdown(false)}
-            >
-              <a
-                href="#packages"
-                style={styles.navLink}
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToSection("packages");
-                }}
-                onMouseOver={(e) => (e.target.style.opacity = "0.7")}
-                onMouseOut={(e) => (e.target.style.opacity = "1")}
-              >
-                Packages
-              </a>
-              {showPackagesDropdown && packages.length > 0 && (
-                <div style={styles.dropdown}>
-                  <div style={styles.dropdownContent}>
-                    {packages.map((pkg) => (
-                      <a
-                        key={pkg.id}
-                        href="#packages"
-                        style={styles.dropdownItem}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          scrollToItem(pkg.id, "package");
-                          setShowPackagesDropdown(false);
-                        }}
-                        onMouseOver={(e) =>
-                          (e.target.style.background = "#f5f5f5")
-                        }
-                        onMouseOut={(e) =>
-                          (e.target.style.background = "white")
-                        }
-                      >
-                        {pkg.title}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <a
-              href="https://walkercleaners.blogspot.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={styles.navLink}
-              onMouseOver={(e) => (e.target.style.opacity = "0.7")}
-              onMouseOut={(e) => (e.target.style.opacity = "1")}
-            >
-              Blog
-            </a>
-            <Link
-              to="/book"
-              style={styles.button}
-              onMouseOver={(e) => {
-                e.target.style.transform = "translateY(-3px)";
-                e.target.style.boxShadow = "0 6px 16px rgba(0,0,0,0.3)";
+              key={index}
+              style={{
+                ...styles.slide,
+                backgroundImage: `url(${slide})`,
+                opacity: currentSlide === index ? 1 : 0,
               }}
-              onMouseOut={(e) => {
-                e.target.style.transform = "translateY(0)";
-                e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
-              }}
-            >
-              Book Now
-            </Link>
-          </nav>
+            />
+          ))}
         </div>
-      </div>
-      <div style={styles.heroContent}>
-        <h1 style={styles.heroTitle}>Walker Cleaners</h1>
-        <p style={styles.heroSubtitle}>Your Mess is our Mission</p>
-      </div>
 
-      <div style={styles.dots}>
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            style={{
-              ...styles.dot,
-              ...(currentSlide === index ? styles.activeDot : {}),
-            }}
-            onClick={() => setCurrentSlide(index)}
-          />
-        ))}
-      </div>
-    </header>
+        <div style={styles.overlay} />
+
+        <div style={styles.nav}>
+          <div style={styles.container}>
+            <Link to="/" style={styles.logoLink}>
+              {logoImage && (
+                <img
+                  src={logoImage}
+                  alt="Walker Cleaners Logo"
+                  style={styles.logo}
+                />
+              )}
+            </Link>
+
+            <nav style={styles.navLinks}>
+              <div
+                style={styles.navLinkWrapper}
+                onMouseEnter={() => setShowServicesDropdown(true)}
+                onMouseLeave={() => setShowServicesDropdown(false)}
+              >
+                <a
+                  href="#services"
+                  style={styles.navLink}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToSection("services");
+                  }}
+                  onMouseOver={(e) => (e.target.style.opacity = "0.7")}
+                  onMouseOut={(e) => (e.target.style.opacity = "1")}
+                >
+                  Services
+                </a>
+                {showServicesDropdown && services.length > 0 && (
+                  <div style={styles.dropdown}>
+                    <div style={styles.dropdownContent}>
+                      {services.map((service) => (
+                        <a
+                          key={service.id}
+                          href="#services"
+                          style={styles.dropdownItem}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            scrollToItem(service.id, "service");
+                            setShowServicesDropdown(false);
+                          }}
+                          onMouseOver={(e) =>
+                            (e.target.style.background = "#f5f5f5")
+                          }
+                          onMouseOut={(e) =>
+                            (e.target.style.background = "white")
+                          }
+                        >
+                          {service.title}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={styles.navLinkWrapper}
+                onMouseEnter={() => setShowPackagesDropdown(true)}
+                onMouseLeave={() => setShowPackagesDropdown(false)}
+              >
+                <a
+                  href="#packages"
+                  style={styles.navLink}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToSection("packages");
+                  }}
+                  onMouseOver={(e) => (e.target.style.opacity = "0.7")}
+                  onMouseOut={(e) => (e.target.style.opacity = "1")}
+                >
+                  Packages
+                </a>
+                {showPackagesDropdown && packages.length > 0 && (
+                  <div style={styles.dropdown}>
+                    <div style={styles.dropdownContent}>
+                      {packages.map((pkg) => (
+                        <a
+                          key={pkg.id}
+                          href="#packages"
+                          style={styles.dropdownItem}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            scrollToItem(pkg.id, "package");
+                            setShowPackagesDropdown(false);
+                          }}
+                          onMouseOver={(e) =>
+                            (e.target.style.background = "#f5f5f5")
+                          }
+                          onMouseOut={(e) =>
+                            (e.target.style.background = "white")
+                          }
+                        >
+                          {pkg.title}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <a
+                href="https://walkercleaners.blogspot.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.navLink}
+                onMouseOver={(e) => (e.target.style.opacity = "0.7")}
+                onMouseOut={(e) => (e.target.style.opacity = "1")}
+              >
+                Blog
+              </a>
+              <Link
+                to="/book"
+                style={styles.button}
+                onMouseOver={(e) => {
+                  e.target.style.transform = "translateY(-3px)";
+                  e.target.style.boxShadow = "0 6px 16px rgba(0,0,0,0.3)";
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.transform = "translateY(0)";
+                  e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
+                }}
+              >
+                Book Now
+              </Link>
+            </nav>
+          </div>
+        </div>
+
+        <div style={styles.heroContent}>
+          <h1 style={styles.heroTitle}>Walker Cleaners</h1>
+          <p style={styles.heroSubtitle}>Your Mess is our Mission</p>
+        </div>
+
+        <div style={styles.dots}>
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              style={{
+                ...styles.dot,
+                ...(currentSlide === index ? styles.activeDot : {}),
+              }}
+              onClick={() => setCurrentSlide(index)}
+            />
+          ))}
+        </div>
+      </header>
+
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          style={styles.floatingBackToTop}
+          onMouseOver={(e) => {
+            e.target.style.background = "rgba(0, 102, 204, 1)";
+            e.target.style.transform = "translateY(-3px)";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = "rgba(0, 102, 204, 0.9)";
+            e.target.style.transform = "translateY(0)";
+          }}
+        >
+          Back to Top
+        </button>
+      )}
+    </>
   );
 };
 

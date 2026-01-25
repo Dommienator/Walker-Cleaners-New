@@ -24,15 +24,24 @@ function HomePage() {
     console.log("Loading data from Supabase...");
     setLoading(true);
 
-    const servicesData = await getServices();
-    const packagesData = await getPackages();
+    try {
+      const servicesData = await getServices();
+      console.log("Services loaded:", servicesData);
+      console.log("Services count:", servicesData?.length || 0);
 
-    console.log("Services:", servicesData.length);
-    console.log("Packages:", packagesData.length);
+      const packagesData = await getPackages();
+      console.log("Packages loaded:", packagesData);
+      console.log("Packages count:", packagesData?.length || 0);
 
-    setServices(servicesData);
-    setPackages(packagesData);
-    setLoading(false);
+      setServices(servicesData || []);
+      setPackages(packagesData || []);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      setServices([]);
+      setPackages([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const styles = {
@@ -103,7 +112,7 @@ function HomePage() {
           <h2 style={styles.sectionTitle}>Our Services</h2>
           {services.length === 0 ? (
             <p style={{ textAlign: "center", color: "#666" }}>
-              No services available. Please add services from the admin panel.
+              No services found.
             </p>
           ) : (
             <div style={styles.servicesGrid}>

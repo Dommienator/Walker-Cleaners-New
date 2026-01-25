@@ -3,6 +3,11 @@ import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
   const navigate = useNavigate();
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const styles = {
     footer: {
       background: "linear-gradient(135deg, #001f3f 0%, #003d7a 100%)",
@@ -37,6 +42,16 @@ const Footer = () => {
       textDecoration: "underline",
       transition: "opacity 0.3s",
     },
+    backToTopButton: {
+      display: "inline-block",
+      marginTop: "0.5rem",
+      color: "white",
+      fontSize: "1rem",
+      fontWeight: "600",
+      textDecoration: "underline",
+      cursor: "pointer",
+      transition: "opacity 0.3s",
+    },
     bottom: {
       textAlign: "center",
       paddingTop: "2rem",
@@ -68,7 +83,22 @@ const Footer = () => {
             Track Your Booking
           </p>
           <p style={styles.link} onClick={() => navigate("/book")}>
-            Book a Service
+            Book a Service/Package
+          </p>
+          <p
+            style={styles.backToTopButton}
+            onClick={() => {
+              navigate("/");
+              setTimeout(scrollToTop, 100);
+            }}
+            onMouseOver={(e) => {
+              e.target.style.opacity = "0.7";
+            }}
+            onMouseOut={(e) => {
+              e.target.style.opacity = "1";
+            }}
+          >
+            Back to Top
           </p>
         </div>
       </div>

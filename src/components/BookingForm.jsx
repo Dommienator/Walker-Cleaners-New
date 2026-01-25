@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import Notification from "./Notification";
@@ -92,6 +92,23 @@ const BookingForm = () => {
       padding: "2.5rem",
       boxShadow: "0 12px 24px rgba(0, 0, 0, 0.3)",
       border: "2px solid rgba(255, 255, 255, 0.1)",
+      position: "relative",
+    },
+    homeButton: {
+      position: "absolute",
+      top: "1.5rem",
+      right: "1.5rem",
+      background: "rgba(255, 255, 255, 0.2)",
+      color: "white",
+      border: "1px solid rgba(255, 255, 255, 0.4)",
+      padding: "0.5rem 1rem",
+      borderRadius: "6px",
+      fontSize: "0.9rem",
+      fontWeight: "600",
+      cursor: "pointer",
+      transition: "all 0.3s ease",
+      textDecoration: "none",
+      display: "inline-block",
     },
     title: {
       color: "white",
@@ -180,6 +197,19 @@ const BookingForm = () => {
       <Header />
       <div style={styles.formSection}>
         <div style={styles.card}>
+          <Link
+            to="/"
+            style={styles.homeButton}
+            onMouseOver={(e) => {
+              e.target.style.background = "rgba(255, 255, 255, 0.3)";
+            }}
+            onMouseOut={(e) => {
+              e.target.style.background = "rgba(255, 255, 255, 0.2)";
+            }}
+          >
+            ← Home
+          </Link>
+
           <h1 style={styles.title}>Book a Service</h1>
           <p style={styles.subtitle}>
             Fill in the details below and we'll get back to you shortly
